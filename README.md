@@ -109,7 +109,7 @@ python manage.py runserver
 
 📷 功能截图
 （在这里添加几张项目运行的效果图，例如商品列表页、购物车页面、管理后台等）
-<img width="2547" height="1354" alt="image" src="https://github.com/user-attachments/assets/44a12590-061d-4a61-919e-dd1fb4f18180" />
+/media/city/OIP-C.jpg
 
 
 🤝 贡献
