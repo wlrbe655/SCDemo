@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+{#    面板#}
+   <div class="panel panel-default">
+   <div class="panel-heading">兼职用户列表</div>
+        <div class="panel-body">
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <span class="input-group-btn">
+                    <a href="/job/add"><button class="btn btn-success" type="button">添加工作人员</button></a>
+                    </span>
+            </div>
+          </div>
+        </div>
+   </div>
+               <table class="table table-bordered">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">姓名</th>
+      <th scope="col">工作状态</th>
+      <th scope="col">工作量</th>
+      <th scope="col">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+        {% for i in form %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <th scope="row">{{ i.name }}</th>
+                <th scope="row">{{ i.get_time_display }}</th>
+                <th scope="row">{{ i.workload }}</th>
+
+                <td>
+                    <a href="/job/edit?nid={{ i.id }}" class="btn btn-primary btn-xs">编辑</a>
+                    <a href="/job/delete?nid={{ i.id }}" class="btn btn-danger btn-xs">删除</a>
+                </td>
+            </tr>
+        {% endfor %}
+
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-fluid">
+    <!-- 面板 -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="panel-title mb-0">
+                        <i class="glyphicon glyphicon-th-list"></i> 商品列表
+                    </h3>
+                </div>
+                <div class="col-md-6 text-md-right mt-2 mt-md-0">
+                    <a href="/sc/add" class="btn btn-success">
+                        <i class="glyphicon glyphicon-plus"></i> 添加商品
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col" class="text-center">#</th>
+                            <th scope="col">商品名称</th>
+                            <th scope="col">价格</th>
+                            <th scope="col">库存</th>
+                            <th scope="col">图片</th>
+                            <th scope="col">分类</th>
+                            <th scope="col">描述</th>
+                            <th scope="col" class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sc %}
+                        <tr>
+                            <th scope="row" class="text-center">{{ forloop.counter }}</th>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                            </td>
+                            <td>
+                                <span class="text-success font-weight-bold">
+                                    ¥{{ item.price|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge
+                                    {% if item.stock < 10 %}badge-danger
+                                    {% elif item.stock < 50 %}badge-warning
+                                    {% else %}badge-success{% endif %}">
+                                    {{ item.stock }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if item.img %}
+                                    <img src="/media/{{ item.img }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;" alt="{{ item.name }}">
+                                {% else %}
+                                    <span class="text-muted">
+                                        <i class="glyphicon glyphicon-picture"></i><br>无图片
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary">{{ item.category }}</span>
+                            </td>
+                            <td>
+                                <span class="description-text" title="{{ item.description }}">
+                                    {{ item.description|truncatechars:20 }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="/sc/edit?nid={{ item.id }}" class="btn btn-primary btn-sm">
+                                        <i class="glyphicon glyphicon-edit"></i> 编辑
+                                    </a>
+                                    <a href="/sc/delete?nid={{ item.id }}" class="btn btn-danger btn-sm"
+                                       onclick="return confirm('确定要删除 {{ item.name }} 吗？')">
+                                        <i class="glyphicon glyphicon-trash"></i> 删除
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="alert alert-info mb-0">
+                                    <i class="glyphicon glyphicon-info-sign"></i> 暂无商品数据
+                                    <a href="/sc/add" class="alert-link ml-2">
+                                        <i class="glyphicon glyphicon-plus"></i> 添加第一个商品
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.description-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    display: inline-block;
+}
+
+.table th {
+    text-align: center;
+    vertical-align: middle !important;
+}
+
+.table td {
+    vertical-align: middle !important;
+}
+
+.btn-group {
+    display: inline-flex;
+}
+</style>
+{% endblock %}

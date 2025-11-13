@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注 册</title>
+    <link rel="stylesheet" href="{% static 'plugin/bootstrap-3.4.1-dist/css/bootstrap.css' %}">
+    <style>
+        .account {
+            width: 400px;
+            border: 1px solid #ddd;
+            border-radius: 2px;
+            box-shadow: 5px 5px 20px #aaa;
+            margin: 100px auto;
+            padding: 20px 40px;
+        }
+        .account h2 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="account">
+        <h2>用户注册</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for i in form %}
+                {% if i.name != 'code' %}
+                    <div class="form-group">
+                        <label>{{ i.label }}</label>
+                        {{ i }}
+                        <span style="color: red">{{ i.errors.0 }}</span>
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div class="form-group">
+                <label for="id_code">图片验证码</label>
+                <div class="row">
+                    <div class="col-xs-7">
+                        {{ form.code }}
+                        <span style="color: red">{{ form.code.errors.0 }}</span>
+                    </div>
+                    <div class="col-xs-5">
+                        <img id="image_code" src="/image/code/" width="100px">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">注 册</button>
+        </form>
+    </div>
+</body>
+</html>

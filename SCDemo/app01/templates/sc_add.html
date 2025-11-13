@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% block content %}
+	<div class="container">
+{#    面板#}
+   <div class="panel panel-default">
+   <div class="panel-heading">商品上传</div>
+        <div class="panel-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="col-lg-4">
+                        {% csrf_token %}
+                        {% for i in form %}
+                            <div class="form-group">
+                            <label>{{ i.label }}</label>
+                                {{ i }}
+                            <span style="color: red">{{ i.errors.0 }}</span>
+                            </div>
+                        {% endfor %}
+                    <button class="btn btn-primary" type="submit">提交</button>
+                </div>
+            </form>
+          </div>
+        </div>
+</div>
+{% endblock %}

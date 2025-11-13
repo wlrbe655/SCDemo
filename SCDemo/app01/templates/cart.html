@@ -1,0 +1,383 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物车 - 小馋虫系统</title>
+    <link rel="stylesheet" href="{% static 'plugin/bootstrap-3.4.1-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugin/bootstrap-3.4.1-dist/css/bootstrap-theme.min.css' %}">
+    <style>        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            padding-top: 70px; /* 为固定导航栏留出空间 */
+        }
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 0;
+            margin-bottom: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            color: #333;
+            font-weight: bold;
+        }
+        .navbar-nav > li > a {
+            color: #333;
+            font-weight: 500;
+        }
+        .navbar-nav > li > a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .container {
+            margin-top: 20px;
+            margin-bottom: 80px; /* 为底部留出空间 */
+        }
+        .panel {
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .panel-heading {
+            background-color: rgba(102, 126, 234, 0.9);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .table-responsive {
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+        .table {
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+            background-color: white;
+        }
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table thead th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        footer {
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+            text-align: center;
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .cart-item {
+            transition: background-color 0.3s;
+        }
+        .cart-item:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        .price-tag {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .subtotal-tag {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .total-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        .checkout-btn {
+            padding: 10px 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+        }
+        .empty-cart .glyphicon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .action-buttons .btn {
+            margin: 0 2px;
+        }
+        .product-name {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+    <script src="{% static 'plugin/bootstrap-3.4.1-dist/js/bootstrap.min.js' %}"></script>
+    {% block js %}
+    <script>        // 从本地存储获取购物车数据
+        function getCart() {
+            return JSON.parse(localStorage.getItem('cart') || '[]');
+        }
+
+        // 渲染购物车
+        function renderCart() {
+            const cart = getCart();
+            const cartTableBody = $('#cart-table-body');
+            cartTableBody.empty();
+
+            if (cart.length === 0) {
+                const emptyRow = `                    <tr>
+                        <td colspan="6" class="empty-cart">
+                            <span class="glyphicon glyphicon-shopping-cart"></span>
+                            <h3>购物车是空的</h3>
+                            <p>快去添加一些商品吧！</p>
+                            <a href="/xcc/list/" class="btn btn-primary">浏览商品</a>
+                        </td>
+                    </tr>
+                `;
+                cartTableBody.append(emptyRow);
+                $('#total-price').text('0.00');
+                $('#checkout-btn').prop('disabled', true);
+                return;
+            }
+
+            let total = 0;
+            cart.forEach((item, index) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+
+                const row = `                    <tr class="cart-item">
+                        <th scope="row">${index + 1}</th>
+                        <td class="product-name">${item.name}</td>
+                        <td><span class="price-tag">¥${item.price.toFixed(2)}</span></td>
+                        <td>
+                            <div class="quantity-control">
+                                <button class="btn btn-default btn-sm minus-btn" onclick="updateQuantity('${item.id}', false)">
+                                    <span class="glyphicon glyphicon-minus"></span>
+                                </button>
+                                <input type="text" class="form-control quantity-input" value="${item.quantity}" readonly>
+                                <button class="btn btn-default btn-sm plus-btn" onclick="updateQuantity('${item.id}', true)">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                </button>
+                            </div>
+                        </td>
+                        <td><span class="subtotal-tag">¥${subtotal.toFixed(2)}</span></td>
+                        <td class="action-buttons">
+                            <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.id}')">
+                                <span class="glyphicon glyphicon-trash"></span> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                cartTableBody.append(row);
+            });
+
+            $('#total-price').text(total.toFixed(2));
+            $('#checkout-btn').prop('disabled', false);
+        }
+
+        // 更新商品数量
+        function updateQuantity(productId, increase) {
+            const cart = getCart();
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                if (increase) {
+                    item.quantity += 1;
+                } else {
+                    item.quantity -= 1;
+                    if (item.quantity <= 0) {
+                        removeFromCart(productId);
+                        return;
+                    }
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+            }
+        }
+
+        // 从购物车中移除商品
+        function removeFromCart(productId) {
+            const cart = getCart();
+            const newCart = cart.filter(item => item.id !== productId);
+            localStorage.setItem('cart', JSON.stringify(newCart));
+            renderCart();
+
+            // 显示删除成功提示
+            alert('商品已从购物车中移除');
+        }
+
+        // 页面加载时渲染购物车
+        $(document).ready(function() {
+            renderCart();
+
+            // 结算按钮点击事件
+            $('#checkout-btn').click(function() {
+                const cart = getCart();
+                if (cart.length === 0) {
+                    alert('购物车是空的，请先添加商品！');
+                    return;
+                }
+
+                // 发送 AJAX 请求到后端的 checkout 视图
+                $.ajax({
+                    url: '/checkout/',  // 后端 checkout 视图的 URL
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(cart),
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'  // 确保 CSRF 令牌正确传递
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            // 订单创建成功，重定向到支付页面
+                            window.location.href = response.redirect_url;
+                        } else {
+                            alert('订单创建失败：' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('订单创建失败，请重试。');
+                        console.error(error);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>        $(function () {
+            // 拦截"我的订单"按钮
+            $('a[href="/user/order/"]').on('click', function (e) {
+                // 获取登录状态
+                var isLoggedIn = $('#user-logged-in').val() !== '';
+                if (!isLoggedIn) {
+                    e.preventDefault(); // 阻止默认跳转
+                    alert('还未登录！');
+                    location.href = '/login/?next=/user/order/'; // 跳转到登录页
+                }
+            });
+        });
+    </script>
+    <input type="hidden" id="user-logged-in" value="{{ request.session.info|default_if_none:'' }}">
+    {% endblock %}
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">
+                    <span class="glyphicon glyphicon-cutlery"></span> 小馋虫系统
+                </a>
+            </div>
+
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/xcc/list/">
+                        <span class="glyphicon glyphicon-th-list"></span> 商品列表
+                    </a></li>
+                    <li class="active"><a href="/cart/">
+                        <span class="glyphicon glyphicon-shopping-cart"></span> 购物车
+                    </a></li>
+                    <li><a href="/user/order/">
+                        <span class="glyphicon glyphicon-folder-open"></span> 我的订单
+                    </a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <span class="glyphicon glyphicon-user"></span> 我的 <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#"><span class="glyphicon glyphicon-user"></span> 个人信息</a></li>
+                            <li><a href="#"><span class="glyphicon glyphicon-lock"></span> 修改密码</a></li>
+                            <li><a href="#"><span class="glyphicon glyphicon-refresh"></span> 切换用户</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="/login/"><span class="glyphicon glyphicon-log-in"></span> 登 录</a></li>
+                            <li><a href="/logout/"><span class="glyphicon glyphicon-off"></span> 退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-md-6">
+                        <span class="glyphicon glyphicon-shopping-cart"></span> 购物车
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge">共 <span id="cart-count">0</span> 件商品</span>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">商品名称</th>
+                                <th scope="col">单价</th>
+                                <th scope="col">数量</th>
+                                <th scope="col">小计</th>
+                                <th scope="col">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-lg-8"></div>
+                    <div class="col-lg-4">
+                        <div class="total-section">
+                            <h3>总计: <span class="price-tag">¥<span id="total-price">0.00</span></span></h3>
+                            <button id="checkout-btn" class="btn btn-success btn-block checkout-btn" disabled>
+                                <span class="glyphicon glyphicon-credit-card"></span> 立即结算
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 小馋虫系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>        // 更新购物车商品数量显示
+        $(document).ready(function() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            $('#cart-count').text(cart.length);
+        });
+    </script>
+</body>
+</html>

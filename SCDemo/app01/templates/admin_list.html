@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+{#    面板#}
+   <div class="panel panel-default">
+   <div class="panel-heading">管理员用户列表</div>
+        <div class="panel-body">
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <span class="input-group-btn">
+                    <a href="/admin/add"><button class="btn btn-success" type="button">添加管理员!</button></a>
+                    </span>
+            </div>
+          </div>
+        </div>
+   </div>
+               <table class="table table-bordered">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">姓名</th>
+      <th scope="col">手机号</th>
+      <th scope="col">密码</th>
+      <th scope="col">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+        {% for i in adm %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <th scope="row">{{ i.username }}</th>
+                <th scope="row">{{ i.tel }}</th>
+                <th scope="row">{{ i.password }}</th>
+                <td>
+                    <a href="/admin/edit?nid={{ i.id }}" class="btn btn-primary btn-xs">编辑</a>
+                    <a href="/admin/delete?nid={{ i.id }}" class="btn btn-danger btn-xs">删除</a>
+                </td>
+            </tr>
+        {% endfor %}
+
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

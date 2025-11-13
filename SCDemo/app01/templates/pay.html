@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付</title>
+    <link rel="stylesheet" href="{% static 'plugin/bootstrap-3.4.1-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugin/bootstrap-3.4.1-dist/css/bootstrap-theme.min.css' %}">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .panel-heading {
+            background-color: #667eea;
+            color: white;
+        }
+        .payment-method {
+            margin-bottom: 20px;
+            display: flex; /* 使用flex布局 */
+            gap: 20px; /* 设置选项之间的间距 */
+        }
+        .payment-method label {
+            display: flex;
+            align-items: center;
+        }
+        .payment-method label img {
+            margin-left: 10px;
+            height: 30px;
+            vertical-align: middle;
+        }
+        .btn-pay {
+            background-color: #667eea;
+            color: white;
+            padding: 10px 30px;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .btn-pay:hover {
+            background-color: #764ba2;
+        }
+        .summary {
+            margin-bottom: 20px;
+        }
+        .summary h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .summary p {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">支付</h3>
+            </div>
+            <div class="panel-body">
+                <form id="payment-form" method="post" action="/pay/">
+                    {% csrf_token %}
+                    {% for i in form %}
+                        <input type="hidden" name="order_id" value="{{ i.id }}">
+
+                         <div class="summary">
+                            <h4>订单信息</h4>
+                            <p><strong>订单ID:</strong> {{ i.id }}</p>
+                            <p><strong>商品信息:</strong> {{ i.goodsDetails }}</p>
+                            <p><strong>总计金额:</strong> <span class="total">¥{{ i.money }}</span></p>
+                        </div>
+                    {% endfor %}
+                    <div class="payment-method">
+                        <h4>选择支付方式</h4>
+                        <label>
+                            <input type="radio" name="payment_method" value="alipay" checked>
+                            支付宝
+                            <img src="{% static 'images/alipay.png' %}" alt="支付宝">
+                        </label>
+                        <label>
+                            <input type="radio" name="payment_method" value="wechat">
+                            微信支付
+                            <img src="{% static 'images/wechatpay.png' %}" alt="微信支付">
+                        </label>
+                    </div>
+                    <button type="button" class="btn btn-pay" id="pay-button">
+                        <i class="glyphicon glyphicon-ok"></i> 确认支付
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+    <script src="{% static 'plugin/bootstrap-3.4.1-dist/js/bootstrap.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#pay-button').click(function() {
+                // 调用支付接口
+                $.ajax({
+                    url: '/pay_is/',  // 确保这个 URL 映射到 pay_is 视图
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}', // 确保CSRF令牌有效
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            alert('支付成功！');
+                            // 清空购物车
+                            localStorage.removeItem('cart');
+                            // 重定向到商品列表页面
+                            window.location.href = '/xcc/list/';
+                        } else {
+                            alert('支付失败，请稍后再试。');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('支付失败，请稍后再试。');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+    <div class="panel panel-default">
+        <div class="panel-heading">订单列表</div>
+        <div class="panel-body">
+            <div class="col-lg-4">
+                <div class="input-group">
+                </div>
+            </div>
+        </div>
+    </div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">订单编号</th>
+                <th scope="col">用户ID</th>
+                <th scope="col">商品信息</th>
+                <th scope="col">金额</th>
+                <th scope="col">配送状态</th>
+                <th scope="col">创建时间</th>
+                <th scope="col">配送时间</th>
+                <th scope="col">完成时间</th>
+                <th scope="col">选择配送员</th>
+                <th scope="col">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in form %}
+                <tr>
+                    <th scope="row">{{ i.id }}</th>
+                    <td>{{ i.stuID }}</td>
+                    <td>{{ i.goodsDetails }}</td>
+                    <td>{{ i.money }}元</td>
+                    <td>{{ i.get_status_display }}</td>
+                    <td>{{ i.createTime }}</td>
+                    <td>{{ i.sendTime }}</td>
+                    <td>{{ i.completeTime }}</td>
+                    <td>
+                        <form class="assign-delivery-form" action="/assign-delivery/{{ i.id }}/" method="post">
+                            {% csrf_token %}
+                            <select class="form-control" name="delivery_person_id">
+                            {% if i.completeTime is not None %}
+                                 <option value="">已送达</option>
+                            {% else %}
+                                {% if i.sendTime is None %}
+                                    {% for job in jobs %}
+                                            {% if job.time == 1 %}
+                                                <option value="{{ job.id }}">{{ job.name }}</option>
+                                            {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                     <option value="">配送中</option>
+                                {% endif %}
+                            {% endif %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary assign-delivery-btn" data-order-id="{{ i.id }}">确定</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+<script src="{% static 'plugin/bootstrap-3.4.1-dist/js/bootstrap.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        $('.assign-delivery-btn').click(function() {
+            const orderId = $(this).data('order-id');
+            const deliveryPersonId = $(this).closest('tr').find('select[name="delivery_person_id"]').val();
+
+            if (!deliveryPersonId) {
+                alert('请选择一个配送员');
+                return;
+            }
+
+            // 调用分配配送员接口
+            $.ajax({
+                url: `/assign-delivery/${orderId}/`,  // 确保这个 URL 映射到 assign_delivery 视图
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}', // 确保CSRF令牌有效
+                    delivery_person_id: deliveryPersonId
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        alert('配送员分配成功');
+                        // 可以在这里刷新页面或更新表格
+                        window.location.reload();
+                    } else {
+                        alert('分配失败：' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('分配失败，请稍后再试。');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
